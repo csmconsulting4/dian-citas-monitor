@@ -18,6 +18,9 @@ CHECKS_PER_RUN = int(os.environ.get("CHECKS_PER_RUN", "5"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "60"))
 
 SCREENSHOT_PATH = Path("dian_posible_disponibilidad.png")
+SCREENSHOT_FULL_PATH = Path("dian_posible_disponibilidad_full.png")
+HTML_PATH = Path("dian_posible_disponibilidad.html")
+TEXT_PATH = Path("dian_posible_disponibilidad.txt")
 
 
 def send_telegram_text(message: str) -> None:
@@ -130,7 +133,16 @@ def check_once(browser, check_number: int) -> str:
             return "no_availability"
 
         print(f"CHECK {check_number}: POSSIBLE AVAILABILITY CONFIRMED")
-        page.screenshot(path=str(SCREENSHOT_PATH), full_page=True)
+
+        # Capture multiple forms of evidence. A viewport screenshot is usually
+        # more reliable than full_page on dynamic SPA/modal layouts.
+        page.screenshot(path=str(SCREENSHOT_PATH), full_page=False)
+        page.wait_for_timeout(1000)
+        page.screenshot(path=str(SCREENSHOT_FULL_PATH), full_page=True)
+
+        TEXT_PATH.write_text(body_text_confirm, encoding="utf-8")
+        HTML_PATH.write_text(page.content(), encoding="utf-8")
+
         return "possible_availability"
 
     finally:
@@ -147,11 +159,23 @@ def alert_possible_availability() -> None:
 
     try:
         send_telegram_photo(SCREENSHOT_PATH, caption)
-        print("Telegram alert + screenshot sent")
+        print("Telegram alert + viewport screenshot sent")
     except Exception as exc:
-        print(f"Could not send screenshot to Telegram: {exc}", file=sys.stderr)
+        print(f"Could not send viewport screenshot to Telegram: {exc}", file=sys.stderr)
         send_telegram_text(caption)
         print("Telegram text fallback sent")
+
+    # Send the visible page text too. This is useful even if a screenshot
+    # renders blank because the DIAN page is mid-transition.
+    try:
+        visible_text = TEXT_PATH.read_text(encoding="utf-8")
+        excerpt = visible_text[:3500]
+        send_telegram_text(
+            "📄 Texto visible detectado en la DIAN:\n\n" + excerpt
+        )
+        print("Telegram page-text evidence sent")
+    except Exception as exc:
+        print(f"Could not send page text to Telegram: {exc}", file=sys.stderr)
 
 
 def main() -> int:
