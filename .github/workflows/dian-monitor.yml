@@ -10,12 +10,12 @@ permissions:
 
 concurrency:
   group: dian-citas-monitor
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -32,10 +32,12 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Check DIAN availability
+      - name: Monitor DIAN approximately every minute
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CHECKS_PER_RUN: "5"
+          INTERVAL_SECONDS: "60"
         run: python dian_monitor.py
 
       - name: Upload screenshot if availability may exist
