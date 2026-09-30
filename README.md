@@ -1,40 +1,40 @@
 # DIAN Citas Monitor
 
-Monitor gratuito para comprobar disponibilidad de **Persona Natural > Videoatención > Devoluciones** en el portal de agendamiento de la DIAN.
+Monitor gratuito de disponibilidad para:
 
-## Cómo funciona
+**Persona Natural → Videoatención → Devoluciones**
 
-GitHub Actions ejecuta una comprobación programada. El script:
+El workflow de GitHub Actions ejecuta una comprobación cada 5 minutos. Si la DIAN deja de mostrar el mensaje:
 
-1. Abre `https://agendamiento.dian.gov.co/`.
-2. Entra a **Agendar cita**.
-3. Selecciona **Persona Natural**.
-4. Selecciona **Videoatención**.
-5. Selecciona **Devoluciones.**
-6. Si aparece exactamente:
-   `No se encontraron especialidades relacionadas según los filtros seleccionados.`
-   termina sin enviar alerta.
-7. Si el flujo llegó correctamente a Devoluciones y ese mensaje no aparece, guarda una captura y envía una alerta por Telegram.
+`No se encontraron especialidades relacionadas según los filtros seleccionados.`
 
-El monitor **no reserva citas automáticamente**.
+el monitor guarda una captura y envía una alerta por Telegram.
 
-## Secrets requeridos
+## Configuración requerida
 
 En GitHub abre:
 
-`Settings > Secrets and variables > Actions > New repository secret`
+**Settings → Secrets and variables → Actions → New repository secret**
 
-Crea:
+Crea estos dos secrets:
 
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 
-Nunca guardes esos valores directamente en el código.
+Nunca pongas el token directamente en el código.
 
-## Ejecución manual
+## Prueba manual
 
-En la pestaña **Actions**, abre **DIAN Citas Monitor** y usa **Run workflow**.
+Ve a **Actions → DIAN Citas Monitor → Run workflow**.
 
-## Programación
+Un resultado normal sin citas termina correctamente y muestra:
 
-El workflow está configurado con cron cada 5 minutos. GitHub Actions puede iniciar ejecuciones programadas con retraso ocasional dependiendo de la carga de los runners.
+`RESULT: no availability`
+
+Si hay posible disponibilidad, envía el mensaje de Telegram y adjunta una captura como artifact del workflow.
+
+## Importante
+
+El monitor solo avisa. No reserva citas automáticamente.
+
+GitHub puede retrasar ocasionalmente los workflows programados, por lo que "cada 5 minutos" es el objetivo de programación, no una garantía de ejecución exacta al minuto.
