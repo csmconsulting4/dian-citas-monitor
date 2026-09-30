@@ -49,10 +49,14 @@ jobs:
           INTERVAL_SECONDS: "60"
         run: python dian_monitor.py
 
-      - name: Upload screenshot if availability may exist
+      - name: Upload evidence if availability may exist
         if: always() && hashFiles('dian_posible_disponibilidad.png') != ''
         uses: actions/upload-artifact@v4
         with:
           name: dian-posible-disponibilidad
-          path: dian_posible_disponibilidad.png
+          path: |
+            dian_posible_disponibilidad.png
+            dian_posible_disponibilidad_full.png
+            dian_posible_disponibilidad.html
+            dian_posible_disponibilidad.txt
           retention-days: 7
