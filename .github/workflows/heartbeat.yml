@@ -3,7 +3,8 @@ name: DIAN Monitor Heartbeat
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * *"
+    # 13:07 UTC = 08:07 Colombia. Avoids the top-of-hour Actions traffic spike.
+    - cron: "7 13 * * *"
 
 permissions:
   contents: read
