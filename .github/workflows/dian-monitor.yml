@@ -2,8 +2,17 @@ name: DIAN Citas Monitor
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "dian_monitor.py"
+      - "requirements.txt"
+      - ".github/workflows/dian-monitor.yml"
   schedule:
-    - cron: "*/5 * * * *"
+    # GitHub schedules are best-effort. Start a fresh runner at :17 each hour,
+    # while the current runner keeps checking every minute for several hours.
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
@@ -15,7 +24,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 355
 
     steps:
       - name: Checkout
@@ -32,11 +41,11 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Monitor DIAN approximately every minute
+      - name: Continuously monitor DIAN approximately every minute
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          CHECKS_PER_RUN: "5"
+          CHECKS_PER_RUN: "300"
           INTERVAL_SECONDS: "60"
         run: python dian_monitor.py
 
