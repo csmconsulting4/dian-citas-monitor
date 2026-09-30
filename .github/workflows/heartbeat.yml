@@ -1,0 +1,48 @@
+name: DIAN Monitor Heartbeat
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Send daily heartbeat to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone, timedelta
+
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat_id = os.environ["TELEGRAM_CHAT_ID"]
+
+          colombia = timezone(timedelta(hours=-5))
+          now = datetime.now(colombia).strftime("%Y-%m-%d %H:%M")
+
+          message = (
+              "✅ Monitor DIAN activo\n\n"
+              f"Heartbeat diario: {now} (Colombia)\n"
+              "El monitor de Persona Natural > Videoatención > Devoluciones sigue configurado."
+          )
+
+          endpoint = f"https://api.telegram.org/bot{token}/sendMessage"
+          data = urllib.parse.urlencode({
+              "chat_id": chat_id,
+              "text": message
+          }).encode("utf-8")
+
+          with urllib.request.urlopen(endpoint, data=data, timeout=20) as response:
+              print(response.read().decode("utf-8"))
+          PY
