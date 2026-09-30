@@ -10,8 +10,6 @@ on:
       - "requirements.txt"
       - ".github/workflows/dian-monitor.yml"
   schedule:
-    # GitHub schedules are best-effort. Start a fresh runner at :17 each hour,
-    # while the current runner keeps checking every minute for several hours.
     - cron: "17 * * * *"
 
 permissions:
@@ -41,12 +39,12 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Continuously monitor DIAN approximately every minute
+      - name: Continuously monitor DIAN
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           CHECKS_PER_RUN: "300"
-          INTERVAL_SECONDS: "60"
+          INTERVAL_SECONDS: "20"
         run: python dian_monitor.py
 
       - name: Upload evidence if availability may exist
@@ -59,4 +57,5 @@ jobs:
             dian_posible_disponibilidad_full.png
             dian_posible_disponibilidad.html
             dian_posible_disponibilidad.txt
+            dian_controles_visibles.txt
           retention-days: 7
